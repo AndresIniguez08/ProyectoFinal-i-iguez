@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { CartProvider } from "../context/CartContext"; 
 
 export default function ItemCount({ stock = 0, initial = 1, onAdd }) {
   const [count, setCount] = useState(
@@ -18,25 +19,24 @@ export default function ItemCount({ stock = 0, initial = 1, onAdd }) {
         -
       </button>
 
-      <span className="min-w-6 text-center">{count}</span>
+<span className="min-w-6 text-center">{count}</span>
 
-      <button
-        className="px-3 py-1 border rounded-lg"
-        onClick={inc}
-        disabled={stock === 0}
-      >
-        +
-      </button>
-
-      <button
-        className="px-4 py-1 rounded-lg bg-gray-900 text-white"
+<button
+  className="px-3 py-1 border rounded-lg"
+  onClick={inc}
+  disabled={stock === 0}
+>
+  +
+</button>
+     <button
         onClick={() => onAdd(count)}
-        disabled={stock === 0}
+        className="bg-black text-white px-4 py-1 rounded"
       >
-        Agregar.
+        Agregar al carrito
       </button>
 
-      {stock === 0 && <small className="text-red-600">Sin stock</small>}
+      
     </div>
   );
 }
+
