@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { getProductById } from "../data/productsService";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "../firebase/config";
 import ItemDetail from "./ItemDetail";
 
 export default function ItemDetailContainer() {
@@ -12,16 +13,33 @@ export default function ItemDetailContainer() {
   useEffect(() => {
     setLoading(true);
 
-    getProductById(itemId)
-      .then((res) => setItem(res ?? null))
-      .finally(() => setLoading(false));
+    const productRef = doc(db, "products", itemId);
+
+    getDoc(productRef)
+      .then((res) => {
+        if (res.exists()) {
+          setItem({
+            id: res.id,
+            ...res.data(),
+          });
+        } else {
+          setItem(null);
+        }
+      })
+      .catch((error) => {
+        console.error(error);
+        // si falla la carga del detalle, lo dejo logueado así detecto rápido dónde está el problema
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   }, [itemId]);
 
   if (loading) return <main className="p-4">Cargando detalle...</main>;
   if (!item) return <main className="p-4">Producto no encontrado.</main>;
 
   return (
-    <main className="max-w-6xl mx-auto p-4">
+    <main className="mx-auto max-w-6xl p-4">
       <ItemDetail item={item} />
     </main>
   );

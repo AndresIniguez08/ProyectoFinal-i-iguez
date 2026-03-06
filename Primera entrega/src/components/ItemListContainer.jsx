@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { getProducts, getProductsByCategory } from "../data/productsService";
-
+import { collection, getDocs, query, where } from "firebase/firestore";
+import { db } from "../firebase/config";
 import ItemList from "./ItemList";
 
 const ItemListContainer = ({ greeting }) => {
@@ -12,21 +12,39 @@ const ItemListContainer = ({ greeting }) => {
   useEffect(() => {
     setLoading(true);
 
-    const request = categoryId
-      ? getProductsByCategory(categoryId)
-      : getProducts();
+    const productsRef = collection(db, "products");
+    const productsQuery = categoryId
+      ? query(productsRef, where("category", "==", categoryId))
+      : productsRef;
 
-    request.then((res) => setProducts(res)).finally(() => setLoading(false));
-  }, [categoryId]); // 👈 requisito de la consigna
+    getDocs(productsQuery)
+      .then((res) => {
+        const productsAdapted = res.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+
+        setProducts(productsAdapted);
+      })
+      .catch((error) => {
+        console.error(error);
+        // si algo falla acá, lo dejo en consola para ver rápido qué está pasando con Firebase
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }, [categoryId]);
 
   return (
     <main className="max-w-6xl mx-auto px-4 py-6">
       {greeting && !categoryId && (
-        <h1 className="text-xl font-semibold mb-4">{greeting}</h1>
+        <h1 className="mb-4 text-xl font-semibold">{greeting}</h1>
       )}
 
       {categoryId && (
-        <h2 className="text-lg font-semibold mb-4">Categoría: {categoryId}</h2>
+        <h2 className="mb-4 text-lg font-semibold">
+          Categoría: {categoryId}
+        </h2>
       )}
 
       {loading ? <p>Cargando productos...</p> : <ItemList items={products} />}
